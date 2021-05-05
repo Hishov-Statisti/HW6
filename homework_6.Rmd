@@ -11,14 +11,15 @@ output:
 ## a ##
 
 
-```{r}
+```{r,echo=FALSE}
 #knitr::include_graphics("1.a.png")
 ```
 
 
-
 ```{r}
-ex6data1 <- read.csv("C:/Users/Alon/Desktop/Studies/Statistics/Statistical_Computing/Exercises/HW6/ex6data1.csv")
+# ex6data1 <- read.csv("C:/Users/Alon/Desktop/Studies/Statistics/Statistical_Computing/Exercises/HW6/ex6data1.csv")
+
+ex6data1 <- read.csv("~/Desktop/Ran/D year/semester b/hishov statisti/exercies/HW6/ex6data1.csv")
 
 graduent.func <- function(beta1,beta2,x1_vec,x2_vec){
   ### input: beta1,beta2. output: the derivative for beta0 and beta1
@@ -46,6 +47,8 @@ while (TRUE) {
 
 
 ```
+
+
 ```{r,echo=FALSE}
 cat(sprintf("beta1 (GN) = %s", round(beta1.j,3)),
     sprintf("beta2 (GN) = %s", round(beta2.j,3)),
@@ -66,7 +69,7 @@ grad_s <- function(beta1,beta2,x1_vec,x2_vec,y_vec){
     return(matrix(data = c(d_s_d_beta1,d_s_d_beta2),nrow = 1,ncol = 2))
 }
 
-hesian <- function(beta1,beta2,x1_vec,x2_vec,y_vec,delta){
+hesian.Q1 <- function(beta1,beta2,x1_vec,x2_vec,y_vec,delta){
   y_d2_beta1 <- grad_s(beta1+delta,beta2,x1_vec,x2_vec,y_vec) - grad_s(beta1-delta,beta2,x1_vec,x2_vec,y_vec)
   
   y_d2_beta1 <- y_d2_beta1[1] / (2*delta)
@@ -95,7 +98,7 @@ eps_for_break <- 10^-5
 while (TRUE) {
   counter <- counter+1
   betas_h.j <- matrix(c(beta1_h.j,beta2_h.j),ncol = 1)
-  betas_h.j_1 <- betas_h.j - solve(hesian(beta1_h.j,beta2_h.j,x1_vec.Q1,x2_vec.Q1,y_vec.Q1,delta)) %*% t(grad_s(beta1_h.j,beta2_h.j,x1_vec.Q1,x2_vec.Q1,y_vec.Q1))
+  betas_h.j_1 <- betas_h.j - solve(hesian.Q1(beta1_h.j,beta2_h.j,x1_vec.Q1,x2_vec.Q1,y_vec.Q1,delta)) %*% t(grad_s(beta1_h.j,beta2_h.j,x1_vec.Q1,x2_vec.Q1,y_vec.Q1))
   
   beta1_h.j <- betas_h.j_1[1]
   beta2_h.j <- betas_h.j_1[2]
@@ -111,3 +114,357 @@ cat(sprintf("beta1 (NR) = %s", round(beta1_h.j,3)),
     sep = "\n")
 
 ```
+
+
+# Q2 #
+
+## a ##
+
+```{r,echo=FALSE}
+#knitr::include_graphics("2.a.png")
+```
+
+## b ##
+
+```{r,echo=FALSE}
+#knitr::include_graphics("2.b.png")
+```
+
+## c ##
+
+```{r,echo=FALSE}
+#knitr::include_graphics("2.c.png")
+```
+
+```{r}
+ex6_count_data <- read.csv("~/Desktop/Ran/D year/semester b/hishov statisti/exercies/HW6/count_data.csv")
+
+y_vec.Q2 <- ex6_count_data$y
+x_vec.Q2 <- ex6_count_data$x
+```
+
+
+```{r}
+grad_s.Q2 <- function(beta0,beta1,x_vec,y_vec){
+  
+  d_log_like_d_beta0 <- - sum(exp(beta0 + beta1 * x_vec)) + sum(y_vec)
+  
+  d_log_like_d_beta1 <- - sum(x_vec * (exp(beta0 + beta1 * x_vec))) +
+    sum(x_vec * y_vec)
+  
+  return(matrix(data = c(d_log_like_d_beta0,d_log_like_d_beta1),
+                nrow = 2,ncol = 1))
+  
+}
+```
+
+
+```{r}
+hesian.Q2 <- function(beta0,beta1,x_vec){
+  
+  s_d2_beta0 <- - sum(exp(beta0 + beta1 * x_vec))
+  
+  s_d_beta0_d_beta1 <- - sum(x_vec.Q2 * (exp(beta0 + beta1 * x_vec)))
+  
+  s_d2_beta1 <- - sum(x_vec^2 * (exp(beta0 + beta1 * x_vec)))
+  
+  return(matrix(data = c(s_d2_beta0,s_d_beta0_d_beta1,s_d_beta0_d_beta1,s_d2_beta1),
+                  nrow = 2,ncol = 2))
+  
+}
+```
+
+```{r}
+beta0_h.j <- beta1_h.j <- 1 # first guess
+
+eps_for_break <- 10^-5
+
+while (TRUE) {
+
+  betas_h.j <- matrix(c(beta0_h.j,beta1_h.j),ncol = 1)
+  
+  betas_h.j_1 <- betas_h.j - solve(hesian.Q2(beta0_h.j,beta1_h.j,x_vec.Q2)) %*%
+    (grad_s.Q2(beta0_h.j,beta1_h.j,x_vec.Q2,y_vec.Q2))
+  
+  beta0_h.j <- betas_h.j_1[1]
+  beta1_h.j <- betas_h.j_1[2]
+  
+  if (max(abs(betas_h.j_1 - betas_h.j)) < eps_for_break) {break}
+}
+
+```
+
+```{r,echo=FALSE}
+cat(sprintf("beta0 (NR) = %s", round(beta0_h.j,5)),
+    sprintf("beta1 (NR) = %s", round(beta1_h.j,5)),
+    sep = "\n")
+```
+
+```{r}
+model <- glm(formula = y_vec.Q2~x_vec.Q2, family = "poisson")
+betas_glm <- summary(model)
+beta0_glm <-  betas_glm$coefficients[1]
+beta1_glm <-  betas_glm$coefficients[2]
+```
+
+```{r,echo=FALSE}
+cat(sprintf("beta0 (glm) = %s", round(beta0_glm,5)),
+    sprintf("beta1 (glm) = %s", round(beta1_glm,5)),
+    sep = "\n")
+```
+
+## d ##
+
+```{r}
+sd_beta0_glm <-  betas_glm$coefficients[3]
+sd_beta1_glm <-  betas_glm$coefficients[4]
+```
+
+
+```{r,echo=FALSE}
+cat(sprintf("beta0 sd (glm) = %s", round(sd_beta0_glm,5)),
+    sprintf("beta1 sd (glm) = %s", round(sd_beta1_glm,5)),
+    sep = "\n")
+```
+
+
+## e ##
+
+The Information matrix (-E[hesian]) is not a function of a random variable so N-R algorithm and FS algorithm are same.
+
+
+# Q5 #
+
+## a ##
+
+```{r,echo=FALSE}
+#knitr::include_graphics("5.a.png")
+```
+
+## b ##
+
+```{r}
+ex6data2 <- read.csv("~/Desktop/Ran/D year/semester b/hishov statisti/exercies/HW6/ex6data2.csv")
+
+x_vec.Q5 <- ex6data2$x
+```
+
+```{r}
+grad_s.Q5 <- function(eta,b,x_vec){
+  
+  n = length(x_vec)
+  
+  d_log_like_d_eta <- n/eta + n - sum(exp(b * x_vec))
+  
+  d_log_like_d_b <- n/b + sum(x_vec) - eta * sum(x_vec * exp(b * x_vec))
+  
+  return(matrix(data = c(d_log_like_d_eta,d_log_like_d_b),
+                nrow = 2,ncol = 1))
+  
+}
+```
+
+```{r}
+hesian.Q5 <- function(eta,b,x_vec){
+  
+  n = length(x_vec)
+  
+  s_d2_eta <- - (n / eta^2)
+  
+  s_d_eta_d_b <- - sum(x_vec * exp(b * x_vec))
+  
+  s_d2_b <- - (n / b^2) - eta * sum(x_vec^2 * exp(b * x_vec))
+  
+  return(matrix(data = c(s_d2_eta,s_d_eta_d_b,s_d_eta_d_b,s_d2_b),
+                  nrow = 2,ncol = 2))
+  
+}
+```
+
+
+```{r}
+eta_h.j <- b_h.j <- 1 # first guess
+
+eps_for_break <- 10^-5
+
+while (TRUE) {
+
+  eta_b_h.j <- matrix(c(eta_h.j,b_h.j),ncol = 1)
+  
+  eta_b_h.j_1 <- eta_b_h.j - solve(hesian.Q5(eta_h.j,b_h.j,x_vec.Q5)) %*%
+    (grad_s.Q5(eta_h.j,b_h.j,x_vec.Q5))
+  
+  eta_h.j <- eta_b_h.j_1[1]
+  b_h.j <- eta_b_h.j_1[2]
+  
+  if (max(abs(eta_b_h.j_1 - eta_b_h.j)) < eps_for_break) {break}
+}
+
+```
+
+```{r,echo=FALSE}
+cat(sprintf("The maximum likelihood estimator of eta (NR) = %s", round(eta_h.j,5)),
+    sprintf("The maximum likelihood estimator of b (NR) = %s", round(b_h.j,5)),
+    sep = "\n")
+```
+
+
+# Q6 #
+
+## b ##
+
+### b.1 - Gradient Descent  ###
+
+??????????????????????????????????? lo oved li
+
+```{r}
+f.Q6 <- function(x,y){
+  return((1 - x)^2 + 100 * (y - x^2)^2)
+}
+```
+
+```{r}
+grad_f.Q6 <- function(x,y){
+  
+  df_dx <-  400 * x^3 - 400*x*y + 2*x -2
+  df_fy <-  200*(y-x^2)
+  
+  return(matrix(data=c(df_dx,df_fy),nrow = 2,ncol = 1))
+  
+}
+```
+
+
+```{r}
+gamma.j.Q6 <- function(f.now,f.next,alpha,beta,gamma,x,y) {
+    while (TRUE) {
+      temp <- f.next > f.now - alpha * gamma * norm(x = grad_f.Q6(x,y),type = "2")
+      if(!temp)(break)
+      gamma <- beta * gamma
+      print(gamma,f.now,f.next)
+    }
+  return(gamma)
+}
+```
+
+```{r}
+t(grad_f.Q6(5,5))%*%(grad_f.Q6(5,5))
+norm(x = grad_f.Q6(5,5),type = "2")^2
+```
+
+
+```{r}
+
+x.j <- y.j <- 10  # first guess
+
+alpha <- beta <- 0.5
+counter <-  0
+
+eps_for_break <- 10^-5
+
+while (TRUE) {
+  
+  counter <- counter + 1
+
+  x_y.j <- matrix(c(x.j,y.j),ncol = 1)
+  
+  gamma.j <- 0.01
+  
+  #f.j <- f.Q6(x.j,y.j) # f.now
+  x_y.j_1 <- x_y.j - gamma.j * grad_f.Q6(x.j,y.j) # x,y next value
+  #f.j_1 <- f.Q6(x_y.j_1[1],x_y.j_1[2]) # f.next
+  
+  #gamma.j <- gamma.j.Q6(f.j,f.j_1,alpha,beta,gamma = 1,x.j,y.j)
+  
+  #x_y.j_1 <- x_y.j - gamma.j *  grad_f.Q6(x.j,y.j)
+  
+  x.j <- x_y.j_1[1]
+  y.j <- x_y.j_1[2]
+
+  
+  if (max(abs(x_y.j_1 - x_y.j)) < eps_for_break) {break}
+  
+}
+
+```
+
+
+```{r,echo=FALSE}
+cat(sprintf("x (Gradient Descent) = %s", x.j),
+    sprintf("y (Gradient Descent) = %s", y.j),
+    sprintf("counter (Gradient Descent) = %s", counter),
+    sep = "\n")
+```
+
+
+### b.2 - NR  ###
+
+
+```{r}
+grad_f.Q6 <- function(x,y){
+  
+  df_dx <-  - 2*(1 - x) - 400*x*(y - x^2)
+  df_fy <-  200*(y-x^2)
+  
+  return <- matrix(data=c(df_dx,df_fy),nrow = 2,ncol = 1)
+  
+}
+```
+
+
+```{r}
+grad_2_f.Q6 <- function(x,y){
+  
+  d2f_d2x <- 2 - 400 * y + 1200 * x^2
+  d2f_dx_dy <- - 400 * x
+  d2f_d2y <- 200
+  
+  return(matrix(data = c(d2f_d2x,d2f_dx_dy,d2f_dx_dy,d2f_d2y),nrow = 2,ncol = 2))
+  
+}
+```
+
+```{r}
+NR.Q6 <- function(x,y){
+  
+  x.j <- x
+  y.j <- y
+  
+  counter <-  0
+  eps_for_break <- 10^-5
+  while (TRUE) {
+  
+  counter <- counter + 1
+
+  x_y.j <- matrix(c(x.j,y.j),ncol = 1)
+  
+  x_y.j_1 <- x_y.j - solve(grad_2_f.Q6(x.j,y.j)) %*%  grad_f.Q6(x.j,y.j) 
+  x.j <- x_y.j_1[1]
+  y.j <- x_y.j_1[2]
+  print(x_y.j_1)
+
+  
+  if (abs(grad_f.Q6(x.j,y.j)) < eps_for_break) {break}
+  }
+  
+  return(cat(sprintf("x (NR) = %s", x.j),
+    sprintf("y (NR) = %s", y.j),
+    sprintf("counter (NR) = %s", counter),
+    sep = "\n"))
+}
+```
+
+```{r,warning=False}
+NR.Q6 (10,10)
+```
+
+
+```{r,warning=False}
+NR.Q6 (-105,20)
+```
+
+
+
+
+
+
