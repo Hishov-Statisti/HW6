@@ -10,9 +10,8 @@ output:
 
 ## a ##
 
-
 ```{r,echo=FALSE}
-#knitr::include_graphics("1.a.png")
+knitr::include_graphics("1.a.png")
 ```
 
 
@@ -57,6 +56,10 @@ cat(sprintf("beta1 (GN) = %s", round(beta1.j,3)),
 ```
 
 ## b ##
+
+```{r,echo=FALSE}
+knitr::include_graphics("1.b.png")
+```
 
 ```{r}
 delta <- 10^-4
@@ -115,25 +118,27 @@ cat(sprintf("beta1 (NR) = %s", round(beta1_h.j,3)),
 
 ```
 
+We can see that the both methods give us same beta1 & beta2.
+
 
 # Q2 #
 
 ## a ##
 
 ```{r,echo=FALSE}
-#knitr::include_graphics("2.a.png")
+knitr::include_graphics("2.a.png")
 ```
 
 ## b ##
 
 ```{r,echo=FALSE}
-#knitr::include_graphics("2.b.png")
+knitr::include_graphics("2.b.png")
 ```
 
 ## c ##
 
 ```{r,echo=FALSE}
-#knitr::include_graphics("2.c.png")
+knitr::include_graphics("2_c.png")
 ```
 
 ```{r}
@@ -213,6 +218,8 @@ cat(sprintf("beta0 (glm) = %s", round(beta0_glm,5)),
     sep = "\n")
 ```
 
+We can see that the both methods give us same beta0 & beta1.
+
 ## d ##
 
 ```{r}
@@ -230,7 +237,7 @@ cat(sprintf("beta0 sd (glm) = %s", round(sd_beta0_glm,5)),
 
 ## e ##
 
-The Information matrix (-E[hesian]) is not a function of a random variable so N-R algorithm and FS algorithm are same.
+The Information matrix (-E[Hesian]) is not a function of a random variable so NR algorithm and FS algorithm are same.
 
 
 # Q5 #
@@ -238,7 +245,8 @@ The Information matrix (-E[hesian]) is not a function of a random variable so N-
 ## a ##
 
 ```{r,echo=FALSE}
-#knitr::include_graphics("5.a.png")
+#
+knitr::include_graphics(c("5.a.1.png","5.a.2.png"))
 ```
 
 ## b ##
@@ -281,6 +289,37 @@ hesian.Q5 <- function(eta,b,x_vec){
 }
 ```
 
+```{r}
+NR.Q5 <- function(eta0,b0,x_vec,eps_for_break){
+  
+  eta_h.j <- eta0
+  b_h.j <- b0
+  
+  while (TRUE) {
+    
+    eta_b_h.j <- matrix(c(eta_h.j,b_h.j),ncol = 1)
+    
+    eta_b_h.j_1 <- eta_b_h.j - solve(hesian.Q5(eta_h.j,b_h.j,x_vec)) %*%
+      (grad_s.Q5(eta_h.j,b_h.j,x_vec))
+    
+    eta_h.j <- eta_b_h.j_1[1]
+    b_h.j <- eta_b_h.j_1[2]
+    
+    if (max(abs(eta_b_h.j_1 - eta_b_h.j)) < eps_for_break) {break}
+  }
+  
+  return(cat(sprintf("The maximum likelihood estimator of eta (NR) = %s",
+                     round(eta_h.j,5)),
+    sprintf("The maximum likelihood estimator of b (NR) = %s",
+            round(b_h.j,5)),
+    sep = "\n"))
+}
+```
+
+```{r}
+NR.Q5(eta0 = 1,b0 = 1,x_vec = x_vec.Q5,eps_for_break = 10-5 )
+```
+
 
 ```{r}
 eta_h.j <- b_h.j <- 1 # first guess
@@ -315,7 +354,9 @@ cat(sprintf("The maximum likelihood estimator of eta (NR) = %s", round(eta_h.j,5
 
 ### b.1 - Gradient Descent  ###
 
-??????????????????????????????????? lo oved li
+```{r,echo=FALSE}
+knitr::include_graphics("6.b.1.png")
+```
 
 ```{r}
 f.Q6 <- function(x,y){
@@ -350,65 +391,64 @@ gamma.j.Q6 <- function(alpha,beta,gamma,x,y) {
 ```
 
 ```{r}
--.5*t(grad_f.Q6(10,10))%*%(grad_f.Q6(10,10))
-norm(x = grad_f.Q6(5,5),type = "2")^2
-```
-
-
-```{r}
-
-x.j <- y.j <- 10  # first guess
-
-alpha <- .5
-beta <- 0.9
-
-counter <-  0
-
-eps_for_break <- 10^-8
-#
-while (TRUE) {
+Gradient_Descent.Q6 <- function(x,y,alpha,beta,eps_for_break){
   
-  counter <- counter + 1
-  
-  x_y.j <- matrix(c(x.j,y.j),ncol = 1)
-  
-  f.j <- f.Q6(x.j,y.j) # f.now
-  
-  gamma.j <- gamma.j.Q6(alpha,beta,gamma = 1,x.j,y.j)
-  
-  x_y.j_1 <- x_y.j - gamma.j * grad_f.Q6(x.j,y.j) # x,y next value
-  f.j_1 <- f.Q6(x_y.j_1[1],x_y.j_1[2]) # f.next
+  x.j <- x
+  y.j <- y
+  counter <-  0
   
   
-  x.j <- x_y.j_1[1]
-  y.j <- x_y.j_1[2]
+  while (TRUE) {
+    
+    counter <- counter + 1
+    
+    x_y.j <- matrix(c(x.j,y.j),ncol = 1) # the current solution
+    
+    f.j <- f.Q6(x.j,y.j) # the current function value
+    gamma.j <- gamma.j.Q6(alpha,beta,gamma = 1,x.j,y.j) # compute the gamma value for the j iteration
+    x_y.j_1 <- x_y.j - gamma.j * grad_f.Q6(x.j,y.j) # the next solution
+    f.j_1 <- f.Q6(x_y.j_1[1],x_y.j_1[2]) # the next function value
+    
+    x.j <- x_y.j_1[1]
+    y.j <- x_y.j_1[2]
+    
+    if(max(abs(f.j_1 - f.j)) < eps_for_break){break}
+  }
   
-  if(max(abs(f.j_1 - f.j)) < eps_for_break){break}
-  
-}
-
-```
-
-
-```{r}
-  while (f.next > f.now - .1 * gamma * t(grad_f.Q6(x,y))%*%(grad_f.Q6(x,y))) {
-      gamma <- beta * gamma
-      #print(c(gamma,f.now,f.next))
-    }
-
-```
-
-
-```{r,echo=FALSE}
-cat(sprintf("x (Gradient Descent) = %s", x.j),
+  return(cat(sprintf("x (Gradient Descent) = %s", x.j),
     sprintf("y (Gradient Descent) = %s", y.j),
     sprintf("counter (Gradient Descent) = %s", counter),
-    sep = "\n")
+    sep = "\n"))
+}
+```
+
+```{r}
+Gradient_Descent.Q6(x = 1.01, y = 1.01, alpha = 0.5, beta = 0.5, eps_for_break = 10^-8)
+```
+
+```{r}
+Gradient_Descent.Q6(x = 2, y = 2, alpha = 0.5, beta = 0.5, eps_for_break = 10^-8)
+```
+
+```{r}
+Gradient_Descent.Q6(x = 0, y = 0, alpha = 0.5, beta = 0.5, eps_for_break = 10^-8)
+```
+
+
+```{r}
+Gradient_Descent.Q6(x = 10, y = 10, alpha = 0.5, beta = 0.5, eps_for_break = 10^-8)
+```
+
+```{r}
+Gradient_Descent.Q6(x = -105, y = 20, alpha = 0.5, beta = 0.5, eps_for_break = 10^-8)
 ```
 
 
 ### b.2 - NR  ###
 
+```{r,echo=FALSE}
+knitr::include_graphics("6.b.2.png")
+```
 
 ```{r}
 grad_f.Q6 <- function(x,y){
@@ -435,13 +475,12 @@ grad_2_f.Q6 <- function(x,y){
 ```
 
 ```{r}
-NR.Q6 <- function(x,y){
+NR.Q6 <- function(x,y,eps_for_break){
   
   x.j <- x
   y.j <- y
   
   counter <-  0
-  eps_for_break <- 10^-5
   while (TRUE) {
   
   counter <- counter + 1
@@ -451,8 +490,6 @@ NR.Q6 <- function(x,y){
   x_y.j_1 <- x_y.j - solve(grad_2_f.Q6(x.j,y.j)) %*%  grad_f.Q6(x.j,y.j) 
   x.j <- x_y.j_1[1]
   y.j <- x_y.j_1[2]
-  print(x_y.j_1)
-
   
   if (abs(grad_f.Q6(x.j,y.j)) < eps_for_break) {break}
   }
@@ -465,16 +502,31 @@ NR.Q6 <- function(x,y){
 ```
 
 ```{r,warning=False}
-NR.Q6 (10,10)
+NR.Q6 (x = 1.01, y = 1.01,eps_for_break = 10^-5)
 ```
-
 
 ```{r,warning=False}
-NR.Q6 (-105,20)
+NR.Q6 (x = 2, y = 2,eps_for_break = 10^-5)
+```
+
+```{r,warning=False}
+NR.Q6 (x = 0, y = 0,eps_for_break = 10^-5)
+```
+
+```{r,warning=False}
+NR.Q6 (x = 10, y = 10,eps_for_break = 10^-5)
+```
+
+```{r,warning=False}
+NR.Q6 (-105,20,eps_for_break = 10^-5)
 ```
 
 
+We can see that the NR algorithm convergent to the optimum solution faster (really faster) them the Gradient Descent algorithm.
 
+The Gradient Descent algorithm use a lot of "cheap" iterations while the NR algorithm use few "expensive" iterations.
+
+In addition this function is a "not normal" function and it is a disadvantage for Gradient Descent algorithm.
 
 
 
