@@ -319,15 +319,15 @@ cat(sprintf("The maximum likelihood estimator of eta (NR) = %s", round(eta_h.j,5
 
 ```{r}
 f.Q6 <- function(x,y){
-  return((1 - x)^2 + 100 * (y - x^2)^2)
+  return((1 - x)^2 + 100 * (y - (x^2))^2)
 }
 ```
 
 ```{r}
 grad_f.Q6 <- function(x,y){
   
-  df_dx <-  400 * x^3 - 400*x*y + 2*x -2
-  df_fy <-  200*(y-x^2)
+  df_dx <-  400 * (x^3) - 400*x*y + 2*x -2
+  df_fy <-  200*(y-(x^2))
   
   return(matrix(data=c(df_dx,df_fy),nrow = 2,ncol = 1))
   
@@ -336,19 +336,21 @@ grad_f.Q6 <- function(x,y){
 
 
 ```{r}
-gamma.j.Q6 <- function(f.now,f.next,alpha,beta,gamma,x,y) {
-    while (TRUE) {
-      temp <- f.next > f.now - alpha * gamma * norm(x = grad_f.Q6(x,y),type = "2")
-      if(!temp)(break)
+gamma.j.Q6 <- function(alpha,beta,gamma,x,y) {
+  x_y.j_1 <- c(x,y) - gamma * grad_f.Q6(x,y) # x,y next value
+  f.j_1 <- f.Q6(x_y.j_1[1],x_y.j_1[2]) # f.next
+  f.j <- f.Q6(x,y) # f.now
+    while (f.j_1 > f.j - alpha * gamma * t(grad_f.Q6(x,y))%*%(grad_f.Q6(x,y))) {
       gamma <- beta * gamma
-      print(gamma,f.now,f.next)
+      x_y.j_1 <- c(x,y) - gamma * grad_f.Q6(x,y) # x,y next value
+      f.j_1 <- f.Q6(x_y.j_1[1],x_y.j_1[2]) # f.next
     }
   return(gamma)
 }
 ```
 
 ```{r}
-t(grad_f.Q6(5,5))%*%(grad_f.Q6(5,5))
+-.5*t(grad_f.Q6(10,10))%*%(grad_f.Q6(10,10))
 norm(x = grad_f.Q6(5,5),type = "2")^2
 ```
 
@@ -357,34 +359,42 @@ norm(x = grad_f.Q6(5,5),type = "2")^2
 
 x.j <- y.j <- 10  # first guess
 
-alpha <- beta <- 0.5
+alpha <- .5
+beta <- 0.9
+
 counter <-  0
 
-eps_for_break <- 10^-5
-
+eps_for_break <- 10^-8
+#
 while (TRUE) {
   
   counter <- counter + 1
-
+  
   x_y.j <- matrix(c(x.j,y.j),ncol = 1)
   
-  gamma.j <- 0.01
+  f.j <- f.Q6(x.j,y.j) # f.now
   
-  #f.j <- f.Q6(x.j,y.j) # f.now
+  gamma.j <- gamma.j.Q6(alpha,beta,gamma = 1,x.j,y.j)
+  
   x_y.j_1 <- x_y.j - gamma.j * grad_f.Q6(x.j,y.j) # x,y next value
-  #f.j_1 <- f.Q6(x_y.j_1[1],x_y.j_1[2]) # f.next
+  f.j_1 <- f.Q6(x_y.j_1[1],x_y.j_1[2]) # f.next
   
-  #gamma.j <- gamma.j.Q6(f.j,f.j_1,alpha,beta,gamma = 1,x.j,y.j)
-  
-  #x_y.j_1 <- x_y.j - gamma.j *  grad_f.Q6(x.j,y.j)
   
   x.j <- x_y.j_1[1]
   y.j <- x_y.j_1[2]
-
   
-  if (max(abs(x_y.j_1 - x_y.j)) < eps_for_break) {break}
+  if(max(abs(f.j_1 - f.j)) < eps_for_break){break}
   
 }
+
+```
+
+
+```{r}
+  while (f.next > f.now - .1 * gamma * t(grad_f.Q6(x,y))%*%(grad_f.Q6(x,y))) {
+      gamma <- beta * gamma
+      #print(c(gamma,f.now,f.next))
+    }
 
 ```
 
