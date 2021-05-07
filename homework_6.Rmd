@@ -135,7 +135,7 @@ knitr::include_graphics("2.a.png")
 knitr::include_graphics("2.b.png")
 ```
 
-## c ##
+## c + d ##
 
 ```{r,echo=FALSE}
 knitr::include_graphics("2_c.png")
@@ -169,7 +169,7 @@ hesian.Q2 <- function(beta0,beta1,x_vec){
   
   s_d2_beta0 <- - sum(exp(beta0 + beta1 * x_vec))
   
-  s_d_beta0_d_beta1 <- - sum(x_vec.Q2 * (exp(beta0 + beta1 * x_vec)))
+  s_d_beta0_d_beta1 <- - sum(x_vec * (exp(beta0 + beta1 * x_vec)))
   
   s_d2_beta1 <- - sum(x_vec^2 * (exp(beta0 + beta1 * x_vec)))
   
@@ -219,8 +219,6 @@ cat(sprintf("beta0 (glm) = %s", round(beta0_glm,5)),
 ```
 
 We can see that the both methods give us same beta0 & beta1.
-
-## d ##
 
 ```{r}
 sd_beta0_glm <-  betas_glm$coefficients[3]
@@ -317,34 +315,7 @@ NR.Q5 <- function(eta0,b0,x_vec,eps_for_break){
 ```
 
 ```{r}
-NR.Q5(eta0 = 1,b0 = 1,x_vec = x_vec.Q5,eps_for_break = 10-5 )
-```
-
-
-```{r}
-eta_h.j <- b_h.j <- 1 # first guess
-
-eps_for_break <- 10^-5
-
-while (TRUE) {
-
-  eta_b_h.j <- matrix(c(eta_h.j,b_h.j),ncol = 1)
-  
-  eta_b_h.j_1 <- eta_b_h.j - solve(hesian.Q5(eta_h.j,b_h.j,x_vec.Q5)) %*%
-    (grad_s.Q5(eta_h.j,b_h.j,x_vec.Q5))
-  
-  eta_h.j <- eta_b_h.j_1[1]
-  b_h.j <- eta_b_h.j_1[2]
-  
-  if (max(abs(eta_b_h.j_1 - eta_b_h.j)) < eps_for_break) {break}
-}
-
-```
-
-```{r,echo=FALSE}
-cat(sprintf("The maximum likelihood estimator of eta (NR) = %s", round(eta_h.j,5)),
-    sprintf("The maximum likelihood estimator of b (NR) = %s", round(b_h.j,5)),
-    sep = "\n")
+NR.Q5(eta0 = 1,b0 = 1,x_vec = x_vec.Q5,eps_for_break = 10^-5 )
 ```
 
 
@@ -501,28 +472,28 @@ NR.Q6 <- function(x,y,eps_for_break){
 }
 ```
 
-```{r,warning=False}
+```{r,eval = TRUE, warning=FALSE}
 NR.Q6 (x = 1.01, y = 1.01,eps_for_break = 10^-5)
 ```
 
-```{r,warning=False}
+```{r,eval = TRUE, warning=FALSE}
 NR.Q6 (x = 2, y = 2,eps_for_break = 10^-5)
 ```
 
-```{r,warning=False}
+```{r,eval = TRUE, warning=FALSE}
 NR.Q6 (x = 0, y = 0,eps_for_break = 10^-5)
 ```
 
-```{r,warning=False}
+```{r,eval = TRUE, warning=FALSE}
 NR.Q6 (x = 10, y = 10,eps_for_break = 10^-5)
 ```
 
-```{r,warning=False}
+```{r,eval = TRUE, warning=FALSE}
 NR.Q6 (-105,20,eps_for_break = 10^-5)
 ```
 
 
-We can see that the NR algorithm convergent to the optimum solution faster (really faster) them the Gradient Descent algorithm.
+We can see that the NR algorithm convergent to the optimum solution faster (really faster) then the Gradient Descent algorithm.
 
 The Gradient Descent algorithm use a lot of "cheap" iterations while the NR algorithm use few "expensive" iterations.
 
