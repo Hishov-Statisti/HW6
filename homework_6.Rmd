@@ -1,9 +1,9 @@
 ---
 title: "Exercies 6 - Alon Goodman & Ran Hassid"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
 ---
 
 # Q1 #
